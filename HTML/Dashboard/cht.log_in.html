@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login — CHT Travel & Tours</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../CSS/log_in.css">
+</head>
+<body>
+  <main class="page">
+    <section class="card">
+      <!-- Logo (simple SVG placeholder similar to original) -->
+      <div class="logo-wrap" aria-hidden="true">
+        <svg class="logo-globe" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" width="72" height="72" role="img" focusable="false">
+          <defs>
+            <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0" stop-color="#3aa7e8"/>
+              <stop offset="1" stop-color="#1e78a9"/>
+            </linearGradient>
+          </defs>
+          <circle cx="32" cy="32" r="30" fill="url(#g)"/>
+          <path d="M6 38c8-6 34-7 52-26" stroke="#fff" stroke-opacity="0.9" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path d="M12 22c7 9 25 12 44 8" stroke="#bfe8ff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-opacity="0.7"/>
+        </svg>
+        <div class="logo-text">
+          <span class="logo-cht">CHT</span>
+          <span class="logo-sub">Travel &amp; Tours</span>
+        </div>
+      </div>
+
+      <h1 class="title">Welcome Back</h1>
+      <p class="subtitle">Sign in to continue to your dashboard</p>
+
+      <form class="form" autocomplete="off" novalidate>
+        <label class="field">
+          <span class="label-text">Login As</span>
+          <div class="select-wrap">
+            <select aria-label="Login as" class="custom-select">
+              <option>USER</option>
+              <option>ADMIN</option>
+            </select>
+            <svg class="chev" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M7 10l5 5 5-5" fill="none" stroke="#2b6b95" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </label>
+
+        <label class="field">
+          <span class="label-text">Email / Username</span>
+          <div class="input-wrap">
+            <svg class="icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 12a4 4 0 1 0-0.001-8.001A4 4 0 0 0 12 12zM4 20a8 8 0 0 1 16 0" fill="none" stroke="#9bb3bd" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <input type="text" class="text-input" placeholder="Enter your email or username" />
+          </div>
+        </label>
+
+        <label class="field">
+          <span class="label-text">Password</span>
+          <div class="input-wrap">
+            <svg class="icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="4" y="11" width="16" height="9" rx="2" ry="2" fill="none" stroke="#9bb3bd" stroke-width="1.6"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="#9bb3bd" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <input type="password" class="text-input" placeholder="Enter your password" />
+          </div>
+        </label>
+
+        <button type="button" class="login-btn" onclick="window.location.href='dashboard.html'">
+          <svg style="margin-right:8px" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Sign In
+        </button>
+
+        <button type="button" class="btn btn-ghost">Exit Application</button>
+
+      </form>
+
+      <div class="footer">
+        <hr />
+        <p>CHT Travel &amp; Tours Management System<br>© 2026 All rights reserved</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
+

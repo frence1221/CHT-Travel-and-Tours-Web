@@ -52,39 +52,44 @@
   </aside>
 
   <!-- MAIN CONTENT -->
-  <main class="user-content">
-    <!-- HEADER -->
-<!-- HEADER -->
-<header class="content-header bookings-header">
-  <div class="bookings-header-left">
-    <h1 class="content-title">Tour Packages</h1>
-    <p class="content-subtitle">
-      Browse available tour packages and destinations
-    </p>
-  </div>
-  <div class="content-header-right">
-    <span id="packagesCountLabel">0 packages</span>
-  </div>
-</header>
+ <main class="user-content">
+  <header class="content-header bookings-header">
+    <div class="bookings-header-left">
+      <h1 class="content-title">Tour Packages</h1>
+      <p class="content-subtitle">
+        Browse available tour packages and destinations
+      </p>
+    </div>
+    <div class="content-header-right">
+      <span id="packagesCountLabel">0 packages</span>
+    </div>
+  </header>
 
-<!-- SEARCH ROW (styled) -->
-<section class="tour-packages-search-row">
-  <div class="tour-packages-search-wrap">
-    <span class="search-icon">🔍</span>
-    <input
-      type="text"
-      id="packagesSearch"
-      placeholder="Search packages by name or destination..."
-    >
+  <section class="tour-packages-search-row">
+    <div class="tour-packages-search-wrap">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        id="packagesSearch"
+        placeholder="Search packages by name or destination..."
+      >
+    </div>
+  </section>
+
+  <section id="packagesGrid" class="tour-packages-grid">
+    <!-- cards inserted by JS -->
+  </section>
+</main>
+
+<!-- IMAGE LIGHTBOX MODAL -->
+<div id="imageLightbox" class="lightbox-overlay hidden">
+  <button class="lightbox-close" id="closeLightbox">✕</button>
+  <div class="lightbox-content">
+    <img id="lightboxImage" src="" alt="Package Image">
+    <p id="lightboxCaption" class="lightbox-caption"></p>
   </div>
-</section>
+</div>
 
-    <!-- PACKAGE CARDS GRID -->
-    <section id="packagesGrid" class="tour-packages-grid">
-      <!-- cards rendered by JS -->
-    </section>
-  </main>
-
-  <script src="../../JS/assets/js/user_app.js"></script>
+<script src="../../JS/assets/user_JS/userTourPackages.js"></script>
 </body>
 </html>

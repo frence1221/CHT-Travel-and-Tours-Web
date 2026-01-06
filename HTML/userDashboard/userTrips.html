@@ -53,52 +53,48 @@
 
   <!-- MAIN CONTENT -->
   <main class="user-content">
-    <!-- HEADER -->
-    <header class="content-header trips-header">
-      <div class="trips-header-left">
-        <h1 class="content-title">Trips</h1>
-        <p class="content-subtitle">
-          View scheduled trips and itineraries
-        </p>
-      </div>
-      <div class="trips-header-right">
-        <span id="tripsCountLabel">0 trips</span>
-      </div>
-    </header>
+  <header class="content-header">
+    <div>
+      <h1 class="content-title">Trips</h1>
+      <p class="content-subtitle">View scheduled trips and itineraries</p>
+    </div>
+    <div>
+      <span id="tripsCountLabel">0 trips</span>
+    </div>
+  </header>
 
-    <!-- SEARCH BAR -->
-    <section class="trips-search-row">
-      <div class="trips-search-wrap">
-        <span class="search-icon">🔍</span>
-        <input
-          type="text"
-          id="tripsSearch"
-          placeholder="Search trips by name or location..."
-        >
-      </div>
-    </section>
+  <section class="trips-search-row">
+    <div class="trips-search-wrap">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        id="tripsSearch"
+        placeholder="Search trips by name or location..."
+      >
+    </div>
+  </section>
 
-    <!-- TRIPS TABLE -->
-    <section class="table-wrapper big trips-table-wrapper">
-      <table id="tripsTable">
-        <thead>
-        <tr>
-          <th>ID</th>
-          <th>Trip Name</th>
-          <th>Description</th>
-          <th>Location</th>
-          <th>Start Date</th>
-          <th>End Date</th>
-          <th>Status</th>
-        </tr>
-        </thead>
-        <tbody>
-        <!-- rows from JS -->
-        </tbody>
-      </table>
-    </section>
-  </main>
+  <section class="table-wrapper big">
+    <table id="tripsTable">
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Trip Name</th>
+        <th>Description</th>
+        <th>Location</th>
+        <th>Start Date</th>
+        <th>End Date</th>
+        <th>Status</th>
+      </tr>
+      </thead>
+      <tbody>
+      <!-- rows from JS -->
+      </tbody>
+    </table>
+  </section>
+</main>
 
-  <script src="../../JS/assets/js/user_app.js"></script>
+<script src="../../JS/assets/user_JS/userTrips.js"></script>
 </body>
 </html>
+ 

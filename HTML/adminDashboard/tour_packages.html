@@ -90,7 +90,7 @@
 
       <div id="packageFormBody" class="package-form-body">
         <form id="packageForm" class="package-form">
-          <input type="hidden" id="packageId">
+          <input type="hidden" id="packageId" name="id">
 
           <div class="package-form-grid">
             <!-- LEFT: IMAGE AREA -->
@@ -101,7 +101,7 @@
                   <span class="image-icon">☁</span>
                   <p>Drag &amp; Drop<br><small>or click to browse</small></p>
                 </div>
-                <input type="file" id="packageImageInput" accept="image/*" hidden>
+                <input type="file" id="packageImageInput" name="image" accept="image/*" hidden>
               </div>
               <button type="button" class="btn btn-secondary small full-width" id="browseImageBtn">📁 Browse</button>
             </div>
@@ -112,11 +112,11 @@
               <div class="row-2">
                 <div class="form-group">
                   <label for="packageName">Package Name:</label>
-                  <input id="packageName" type="text" placeholder="Enter package name" required>
+                  <input id="packageName" name="name" type="text" placeholder="Enter package name" required>
                 </div>
                 <div class="form-group">
                   <label for="destination">Destination:</label>
-                  <input id="destination" type="text" placeholder="Enter destination" required>
+                  <input id="destination" name="destination" type="text" placeholder="Enter destination" required>
                 </div>
               </div>
 
@@ -124,23 +124,23 @@
               <div class="row-4">
                 <div class="form-group">
                   <label for="duration">Duration (Days):</label>
-                  <input id="duration" type="number" min="1" value="4">
+                  <input id="duration" name="duration_days" type="number" min="1" value="4">
                 </div>
 
                 <div class="form-group">
                   <label for="maxPax">Max Participants:</label>
-                  <input id="maxPax" type="number" min="1" value="20">
+                  <input id="maxPax" name="max_pax" type="number" min="1" value="20">
                 </div>
 
                 <div class="form-group">
                   <label for="price">Price (₱):</label>
-                  <input id="price" type="number" step="0.01" min="0" placeholder="Enter price">
+                  <input id="price" name="price" type="number" step="0.01" min="0" placeholder="Enter price">
                 </div>
 
                 <div class="form-group checkbox-group">
                   <label>Status:</label>
                   <label class="checkbox-inline">
-                    <input id="status" type="checkbox" checked> Active
+                    <input id="status" name="status" type="checkbox" checked> Active
                   </label>
                 </div>
               </div>
@@ -148,13 +148,13 @@
               <!-- Description -->
               <div class="form-group">
                 <label for="description">Description:</label>
-                <textarea id="description" rows="3" placeholder="Enter description"></textarea>
+                <textarea id="description" name="description" rows="3" placeholder="Enter description"></textarea>
               </div>
 
               <!-- Inclusions -->
               <div class="form-group">
                 <label for="inclusions">Inclusions:</label>
-                <textarea id="inclusions" rows="3" placeholder="e.g., flights, hotel, tours, meals"></textarea>
+                <textarea id="inclusions" name="inclusions" rows="3" placeholder="e.g., flights, hotel, tours, meals"></textarea>
               </div>
 
               <!-- ACTION BUTTONS -->
@@ -169,6 +169,13 @@
     </section>
   </main>
 
-  <script src="../JS/assets/js/app.js"></script>
+  <script src="../../JS/assets/admin_JS/adminTourPackages.js"></script>
+  <script>
+    // Logout functionality
+    document.getElementById('logoutBtnPackages').addEventListener('click', function() {
+      localStorage.removeItem('cht_current_username');
+      window.location.href = '../log_in.html';
+    });
+  </script>
 </body>
 </html>

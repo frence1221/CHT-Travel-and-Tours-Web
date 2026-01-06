@@ -158,6 +158,13 @@
     </section>
   </main>
 
-  <script src="../JS/assets/js/app.js"></script>
+  <script src="../../JS/assets/admin_JS/adminEmployees.js"></script>
+  <script>
+    // Logout functionality
+    document.getElementById('logoutBtnEmployees').addEventListener('click', function() {
+      localStorage.removeItem('cht_current_username');
+      window.location.href = '../log_in.html';
+    });
+  </script>
 </body>
 </html>

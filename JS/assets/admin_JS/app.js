@@ -3,25 +3,8 @@
 // Detect which page we are on by checking body classes or element IDs
 document.addEventListener("DOMContentLoaded", () => {
   /* -------- LOGIN PAGE -------- */
-  const loginForm = document.getElementById("loginForm");
-  if (loginForm) {
-    loginForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-
-      const role = document.getElementById("role").value;
-      const username = document.getElementById("email").value || "user";
-
-      // Store username so user dashboard can show it
-      localStorage.setItem("cht_current_username", username);
-
-      // Redirect based on selected role
-      if (role === "admin") {
-        window.location.href = "adminDashboard/dashboard.html";
-      } else if (role === "user") {
-        window.location.href = "userDashboard/userDashboard.html";
-      }
-    });
-  }
+  // Login is now handled by log_in.js with proper database authentication
+  // Do NOT add any login handlers here
 
   /* -------- COMMON LOGOUT BUTTONS -------- */
   const logoutButtons = [

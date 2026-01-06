@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       localStorage.removeItem("cht_current_username");
-      window.location.href = "login.html";
+      window.location.href = "../log_in.html";
     });
   }
 
@@ -95,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       localStorage.removeItem("cht_current_username");
-      window.location.href = "login.html";
+      window.location.href = "../log_in.html";
     });
   }
 });
@@ -479,7 +479,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       localStorage.removeItem("cht_current_username");
-      window.location.href = "login.html";
+      window.location.href = "../log_in.html";
     });
   }
 });
@@ -633,7 +633,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       localStorage.removeItem("cht_current_username");
-      window.location.href = "login.html";
+      window.location.href = "../log_in.html";
     });
   }
 });
@@ -886,7 +886,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       localStorage.removeItem("cht_current_username");
-      window.location.href = "login.html";
+      window.location.href = "../log_in.html";
     });
   }
 });
@@ -1008,7 +1008,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       localStorage.removeItem("cht_current_username");
-      window.location.href = "login.html";
+      window.location.href = "../log_in.html";
     });
   }
 });
@@ -1239,7 +1239,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       localStorage.removeItem("cht_current_username");
-      window.location.href = "login.html";
+      window.location.href = "../log_in.html";
     });
   }
 });

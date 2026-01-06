@@ -51,39 +51,49 @@
     </div>
   </aside>
 
-  <!-- MAIN CONTENT -->
   <main class="user-content">
-    <!-- HEADER -->
-    <header class="content-header accommodations-header">
-      <div class="accommodations-header-left">
-        <h1 class="content-title">Accommodations</h1>
-        <p class="content-subtitle">
-          Browse available hotels and accommodations
-        </p>
-      </div>
-      <div class="accommodations-header-right">
-        <span id="hotelsCountLabel">0 accommodations</span>
-      </div>
-    </header>
+  <header class="content-header">
+    <div>
+      <h1 class="content-title">Accommodations</h1>
+      <p class="content-subtitle">Browse available hotels and accommodations</p>
+    </div>
+    <div class="header-count">
+      <span id="hotelsCountLabel">0 accommodations</span>
+    </div>
+  </header>
 
-    <!-- SEARCH BAR -->
-    <section class="accommodations-search-row">
-      <div class="accommodations-search-wrap">
-        <span class="search-icon">🔍</span>
-        <input
-          type="text"
-          id="hotelsSearch"
-          placeholder="Search by hotel name or location..."
-        >
-      </div>
-    </section>
+  <section class="hotels-search-row">
+    <div class="hotels-search-wrap">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        id="hotelsSearch"
+        placeholder="Search by name or address..."
+      >
+    </div>
+  </section>
 
-    <!-- HOTEL CARDS GRID -->
-    <section id="hotelsGrid" class="accommodations-grid">
-      <!-- cards rendered by JS -->
-    </section>
-  </main>
+  <section class="table-wrapper big">
+    <table id="hotelsTable">
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Address</th>
+        <th>Contact</th>
+        <th>Rooms</th>
+        <th>Room Type</th>
+        <th>Amenities</th>
+      </tr>
+      </thead>
+      <tbody>
+      <!-- rows from JS -->
+      </tbody>
+    </table>
+  </section>
+</main>
 
-  <script src="../../JS/assets/js/user_app.js"></script>
+<script src="../../JS/assets/user_JS/userHotel.js"></script>
 </body>
 </html>
+  

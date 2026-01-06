@@ -41,7 +41,7 @@
         <p class="content-subtitle">Overview of sales, bookings and performance</p>
       </div>
       <div class="content-header-right">
-        <button class="btn btn-primary small">⟳ Refresh Data</button>
+        <button class="btn btn-primary small" id="refreshDashboardBtn">⟳ Refresh Data</button>
       </div>
     </header>
 
@@ -51,7 +51,7 @@
         <div class="card-icon money">₱</div>
         <div>
           <p class="metric-label">Total Sales</p>
-          <p class="metric-value">₱717,600.00</p>
+          <p class="metric-value" id="totalSalesValue">Loading...</p>
         </div>
       </article>
 
@@ -59,7 +59,7 @@
         <div class="card-icon booking">📅</div>
         <div>
           <p class="metric-label">Total Bookings</p>
-          <p class="metric-value">5</p>
+          <p class="metric-value" id="totalBookingsValue">Loading...</p>
         </div>
       </article>
 
@@ -67,7 +67,7 @@
         <div class="card-icon package">🧳</div>
         <div>
           <p class="metric-label">Active Packages</p>
-          <p class="metric-value">4</p>
+          <p class="metric-value" id="activePackagesValue">Loading...</p>
         </div>
       </article>
 
@@ -75,7 +75,7 @@
         <div class="card-icon employee">👥</div>
         <div>
           <p class="metric-label">Active Employees</p>
-          <p class="metric-value">6</p>
+          <p class="metric-value" id="activeEmployeesValue">Loading...</p>
         </div>
       </article>
     </section>
@@ -112,25 +112,14 @@
       <article class="card">
         <h2 class="card-title">Recent Bookings</h2>
         <div class="table-wrapper">
-          <table>
+          <table id="recentBookingsTable">
             <thead>
             <tr>
               <th>ID</th><th>Client</th><th>Package</th><th>Date</th><th>Status</th>
             </tr>
             </thead>
             <tbody>
-            <tr>
-              <td>4</td><td>Miguel Santos</td><td>Taiwan Taipei + Taichung 4D3N</td><td>2025‑12‑15</td><td>Cancelled</td>
-            </tr>
-            <tr>
-              <td>5</td><td>Andrea Bautista</td><td>Hokkaido Icebreaker + Sapporo Snow Festival</td><td>2025‑12‑10</td><td>Confirmed</td>
-            </tr>
-            <tr>
-              <td>2</td><td>Jenny Villanueva</td><td>Hong Kong & Macau Getaway</td><td>2025‑12‑01</td><td>Pending</td>
-            </tr>
-            <tr>
-              <td>1</td><td>Carlos Ramirez</td><td>Hokkaido Icebreaker + Sapporo Snow Festival</td><td>2025‑11‑20</td><td>Confirmed</td>
-            </tr>
+            <!-- Loaded by JS -->
             </tbody>
           </table>
         </div>
@@ -158,6 +147,13 @@
     </section>
   </main>
 
-  <script src="assets/js/app.js"></script>
+  <script src="../../JS/assets/admin_JS/adminDashboard.js"></script>
+  <script>
+    // Logout functionality
+    document.getElementById('logoutBtnDash').addEventListener('click', function() {
+      localStorage.removeItem('cht_current_username');
+      window.location.href = '../log_in.html';
+    });
+  </script>
 </body>
 </html>

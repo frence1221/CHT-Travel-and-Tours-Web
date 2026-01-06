@@ -54,51 +54,47 @@
 
   <!-- MAIN CONTENT -->
   <main class="user-content">
-    <!-- HEADER -->
-    <header class="content-header transport-header">
-      <div class="transport-header-left">
-        <h1 class="content-title">Transportation</h1>
-        <p class="content-subtitle">
-          Manage vehicle fleet and transportation options
-        </p>
-      </div>
-      <div class="transport-header-right">
-        <span id="transportCountLabel">0 vehicles</span>
-      </div>
-    </header>
+  <header class="content-header">
+    <div>
+      <h1 class="content-title">Transportation</h1>
+      <p class="content-subtitle">Manage vehicle fleet and transportation options</p>
+    </div>
+    <div>
+      <span id="transportCountLabel">0 vehicles</span>
+    </div>
+  </header>
 
-    <!-- SEARCH -->
-    <section class="transport-search-row">
-      <div class="transport-search-wrap">
-        <span class="search-icon">🔍</span>
-        <input
-          type="text"
-          id="transportSearch"
-          placeholder="Search by vehicle type or provider..."
-        >
-      </div>
-    </section>
+  <section class="transport-search-row">
+    <div class="transport-search-wrap">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        id="transportSearch"
+        placeholder="Search by vehicle type or provider..."
+      >
+    </div>
+  </section>
 
-    <!-- TABLE -->
-    <section class="table-wrapper big transport-table-wrapper">
-      <table id="transportTable">
-        <thead>
-        <tr>
-          <th>ID</th>
-          <th>Vehicle Type</th>
-          <th>Capacity</th>
-          <th>Plate Number</th>
-          <th>Provider</th>
-          <th>Price/Day</th>
-        </tr>
-        </thead>
-        <tbody>
-        <!-- rows from JS -->
-        </tbody>
-      </table>
-    </section>
-  </main>
+  <section class="table-wrapper big">
+    <table id="transportTable">
+      <thead>
+      <tr>
+        <th>ID</th>
+        <th>Type</th>
+        <th>Capacity</th>
+        <th>Plate Number</th>
+        <th>Provider</th>
+      </tr>
+      </thead>
+      <tbody>
+      <!-- rows from JS -->
+      </tbody>
+    </table>
+  </section>
+</main>
 
-  <script src="../../JS/assets/js/user_app.js"></script>
+<script src="../../JS/assets/user_JS/userTransportaion.js"></script>
 </body>
 </html>
+
+ 

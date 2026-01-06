@@ -51,36 +51,39 @@
     </div>
   </aside>
 
-  <!-- MAIN CONTENT -->
-  <main class="user-content">
-    <!-- HEADER + Add Payment button -->
-    <header class="content-header payments-header">
+ <main class="user-content">
+    <header class="content-header">
       <div>
-        <h1 class="content-title">Payments</h1>
-        <p class="content-subtitle">
-          Track payment records and transactions
-        </p>
+        <h1 class="content-title">💳 Payments</h1>
+        <p class="content-subtitle">Track payment records and transactions</p>
       </div>
-      <div class="payments-header-right">
-        <button class="btn btn-primary payments-add-btn" id="addPaymentBtn">
-          + Add Record Payment
-        </button>
+      <div class="header-count">
+        <span id="paymentsCountLabel">0 payments</span>
       </div>
     </header>
 
-    <!-- STAT CARDS -->
-    <section class="bookings-stats-row payments-stats-row">
-      <article class="card bookings-stat-card">
-        <div class="bookings-stat-label">Total Received</div>
-        <div class="payments-stat-amount" id="statTotalReceived">₱0.00</div>
+    <!-- SUMMARY CARDS -->
+    <section class="payments-summary-row">
+      <article class="payments-summary-card received">
+        <div class="summary-icon">✓</div>
+        <div class="summary-content">
+          <h3>Total Received</h3>
+          <p id="totalReceivedValue" class="summary-value">₱0.00</p>
+        </div>
       </article>
-      <article class="card bookings-stat-card">
-        <div class="bookings-stat-label">Pending Payments</div>
-        <div class="payments-stat-amount pending" id="statPendingAmount">₱0.00</div>
+      <article class="payments-summary-card pending">
+        <div class="summary-icon">⏳</div>
+        <div class="summary-content">
+          <h3>Pending Payments</h3>
+          <p id="totalPendingValue" class="summary-value">₱0.00</p>
+        </div>
       </article>
-      <article class="card bookings-stat-card">
-        <div class="bookings-stat-label">Total Transactions</div>
-        <div class="bookings-stat-value" id="statTransactions">0</div>
+      <article class="payments-summary-card transactions">
+        <div class="summary-icon">📊</div>
+        <div class="summary-content">
+          <h3>Total Transactions</h3>
+          <p id="totalTransactionsValue" class="summary-value">0</p>
+        </div>
       </article>
     </section>
 
@@ -91,102 +94,34 @@
         <input
           type="text"
           id="paymentsSearch"
-          placeholder="Search by client, reference or booking ID..."
+          placeholder="Search by reference, method or booking ID..."
         >
       </div>
     </section>
 
     <!-- PAYMENTS TABLE -->
-    <section class="table-wrapper big payments-table-wrapper">
-      <table id="paymentsTable">
-        <thead>
-        <tr>
-          <th>ID</th>
-          <th>Booking</th>
-          <th>Client</th>
-          <th>Package</th>
-          <th>Amount</th>
-          <th>Date</th>
-          <th>Method</th>
-          <th>Status</th>
-          <th>Reference</th>
-        </tr>
-        </thead>
-        <tbody>
-        <!-- rows by JS -->
-        </tbody>
-      </table>
+    <section class="payments-table-card">
+      <div class="table-wrapper">
+        <table id="paymentsTable">
+          <thead>
+            <tr>
+              <th>Payment ID</th>
+              <th>Booking</th>
+              <th>Amount</th>
+              <th>Date</th>
+              <th>Method</th>
+              <th>Status</th>
+              <th>Reference</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- rows from JS -->
+          </tbody>
+        </table>
+      </div>
     </section>
   </main>
 
-  <!-- ADD PAYMENT MODAL -->
-  <div id="paymentModalOverlay" class="modal-overlay hidden">
-    <div class="modal">
-      <div class="modal-header">
-        <h3>Add Record Payment</h3>
-        <button class="modal-close-btn" id="closePaymentModalBtn">✕</button>
-      </div>
-      <p class="modal-subtitle">Enter payment details</p>
-
-      <form id="paymentForm" class="modal-form">
-        <div class="form-group">
-          <label for="payBookingId">Booking ID</label>
-          <input type="number" id="payBookingId" min="1" required>
-        </div>
-
-        <div class="form-group">
-          <label for="payClientName">Client Name</label>
-          <input type="text" id="payClientName" required>
-        </div>
-
-        <div class="form-group">
-          <label for="payPackageName">Package</label>
-          <input type="text" id="payPackageName" required>
-        </div>
-
-        <div class="form-group">
-          <label for="payAmount">Amount (₱)</label>
-          <input type="number" id="payAmount" min="0" step="0.01" required>
-        </div>
-
-        <div class="form-group">
-          <label for="payDate">Date of Paying</label>
-          <input type="date" id="payDate" required>
-        </div>
-
-        <div class="form-group">
-          <label for="payMethod">Method</label>
-          <select id="payMethod" required>
-            <option value="Bank Transfer">Bank Transfer</option>
-            <option value="Credit/Debit Card">Credit/Debit Card</option>
-            <option value="GCash">GCash</option>
-            <option value="Cash">Cash</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="payStatus">Status</label>
-          <select id="payStatus" required>
-            <option value="PAID">PAID</option>
-            <option value="PENDING">PENDING</option>
-            <option value="FAILED">FAILED</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="payReference">Reference</label>
-          <input type="text" id="payReference" required>
-        </div>
-
-        <div class="modal-actions">
-          <button type="button" class="btn btn-secondary small" id="cancelPaymentBtn">Cancel</button>
-          <button type="submit" class="btn btn-primary small">Save</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <script src="../../JS/assets/js/user_app.js"></script>
+  <script src="../../JS/assets/user_JS/userPayments.js"></script>
 </body>
 </html>

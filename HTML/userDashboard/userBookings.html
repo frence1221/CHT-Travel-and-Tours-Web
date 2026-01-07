@@ -177,10 +177,57 @@
           <label>Client Name: <input type="text" id="editClientName" name="clientName" required></label>
           <label>Client Email: <input type="email" id="editClientEmail" name="clientEmail"></label>
           <label>Client Contact: <input type="text" id="editClientContact" name="clientContact"></label>
-          <label>Destination: <input type="text" id="editDestination" name="destination"></label>
-          <label>Package Name: <input type="text" id="editPackageName" name="packageName"></label>
-          <label>Start Date: <input type="date" id="editStartDate" name="startDate"></label>
-          <label>End Date: <input type="date" id="editEndDate" name="endDate"></label>
+          <label>Destination:
+            <select id="editDestination" name="destination"></select>
+          </label>
+          <label>Package Name:
+            <select id="editPackageName" name="packageName"></select>
+          </label>
+            <script>
+              // Populate package and destination dropdowns in edit modal
+              async function populatePackageAndDestinationDropdowns(selectedPackage, selectedDestination) {
+                const packageSelect = document.getElementById('editPackageName');
+                const destinationSelect = document.getElementById('editDestination');
+                if (!packageSelect || !destinationSelect) return;
+                try {
+                  const res = await fetch('api/packages_list.php');
+                  const data = await res.json();
+                  if (!data.success) throw new Error('Failed to load packages');
+                  // Populate packages
+                  packageSelect.innerHTML = '';
+                  data.packages.forEach(pkg => {
+                    const opt = document.createElement('option');
+                    opt.value = pkg.name;
+                    opt.textContent = pkg.name;
+                    if (selectedPackage && selectedPackage === pkg.name) opt.selected = true;
+                    packageSelect.appendChild(opt);
+                  });
+                  // Populate destinations (unique)
+                  const destinations = [...new Set(data.packages.map(pkg => pkg.destination))];
+                  destinationSelect.innerHTML = '';
+                  destinations.forEach(dest => {
+                    const opt = document.createElement('option');
+                    opt.value = dest;
+                    opt.textContent = dest;
+                    if (selectedDestination && selectedDestination === dest) opt.selected = true;
+                    destinationSelect.appendChild(opt);
+                  });
+                } catch (err) {
+                  packageSelect.innerHTML = '<option>Failed to load</option>';
+                  destinationSelect.innerHTML = '<option>Failed to load</option>';
+                }
+              }
+              // Hook into modal open logic
+              document.addEventListener('DOMContentLoaded', () => {
+                const editModal = document.getElementById('editBookingModal');
+                if (!editModal) return;
+                editModal.addEventListener('showEditModal', e => {
+                  const { packageName, destination } = e.detail || {};
+                  populatePackageAndDestinationDropdowns(packageName, destination);
+                });
+              });
+            </script>
+          <label>Booking Date: <input type="date" id="editBookingDate" name="bookingDate"></label>
           <label>Pax Count: <input type="number" id="editPax" name="pax" min="1"></label>
           <label>Total Amount: <input type="number" id="editTotalAmount" name="totalAmount" min="0" step="0.01"></label>
           <label>Status:

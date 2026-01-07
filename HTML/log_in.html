@@ -6,6 +6,28 @@
     <title>CHT Travel & Tour Management System - Login</title>
     <link rel="stylesheet" href="./CSS/assets/css/style.css">
     <style>
+        body.login-body {
+            background: url('../HTML/assets/new background.jpg') no-repeat center center fixed;
+            background-size: cover;
+        }
+        .login-card {
+            background: rgba(255,255,255,0.15);
+            box-shadow: 0 4px 32px rgba(0,0,0,0.18);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 20px;
+        }
+        .login-card, .login-card * {
+            color: #fff !important;
+        }
+        .login-card select, .login-card option {
+            color: #111 !important;
+            background: #fff !important;
+        }
+        .login-card input[type="password"], .login-card input[type="text"] {
+            color: #111 !important;
+            background: #fff !important;
+        }
         #loginMessage {
             margin-top: 15px;
             padding: 10px;
@@ -14,12 +36,12 @@
             text-align: center;
         }
         #loginMessage.error {
-            background: #ffebee;
+            background: #be6f7b;
             color: #c62828;
             display: block;
         }
         #loginMessage.success {
-            background: #e8f5e9;
+            background: #85d18b;
             color: #2e7d32;
             display: block;
         }
@@ -29,12 +51,8 @@
 <body class="login-body">
     <div class="login-wrapper">
         <div class="login-card">
-            <div class="login-logo">
-                <div class="logo-circle">CHT</div>
-                <div class="logo-text">
-                    <span>CHT Travel & Tours</span>
-                    <small>Management System</small>
-                </div>
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 10px;">
+                <img src="../HTML/assets/no bg logo.png" alt="CHT Travel & Tours Logo" style="max-width: 150px; width: 150px; height: auto; display: block;">
             </div>
 
             <div class="login-title">

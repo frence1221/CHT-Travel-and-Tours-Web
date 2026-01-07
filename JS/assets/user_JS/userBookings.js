@@ -23,8 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const editClientContact = document.getElementById('editClientContact');
   const editDestination = document.getElementById('editDestination');
   const editPackageName = document.getElementById('editPackageName');
-  const editStartDate = document.getElementById('editStartDate');
-  const editEndDate = document.getElementById('editEndDate');
+    const editBookingDate = document.getElementById('editBookingDate');
   const editPax = document.getElementById('editPax');
   const editTotalAmount = document.getElementById('editTotalAmount');
   const editStatus = document.getElementById('editStatus');
@@ -159,16 +158,16 @@ document.addEventListener("DOMContentLoaded", () => {
         editClientName.value = booking.clientName || '';
         editClientEmail.value = booking.clientEmail || '';
         editClientContact.value = booking.clientContact || '';
-        editDestination.value = booking.destination || '';
-        editPackageName.value = booking.packageName || '';
-        editStartDate.value = booking.startDate ? booking.startDate.split('T')[0] : '';
-        editEndDate.value = booking.endDate ? booking.endDate.split('T')[0] : '';
+        editBookingDate.value = booking.startDate ? booking.startDate.split('T')[0] : '';
         editPax.value = booking.pax || 1;
         editTotalAmount.value = booking.totalAmount || 0;
         editStatus.value = booking.status || 'Pending';
         editSpecialRequests.value = booking.specialRequests || '';
         editAddons.value = (booking.addons && Array.isArray(booking.addons)) ? booking.addons.join(', ') : '';
         if (editModal) {
+          // Fire event to populate dropdowns and select current values
+          const event = new CustomEvent('showEditModal', { detail: { packageName: booking.packageName, destination: booking.destination } });
+          editModal.dispatchEvent(event);
           editModal.style.display = 'block';
           console.log('Edit modal opened');
         } else {
@@ -179,8 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
           try {
             const response = await fetch('api/bookings_delete.php', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ bookingId })
+              headers: { 'Content-Type': 'application/json' }
             });
             const result = await response.json();
             if (result.success) {
@@ -218,8 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
         clientContact: editClientContact.value,
         destination: editDestination.value,
         packageName: editPackageName.value,
-        startDate: editStartDate.value,
-        endDate: editEndDate.value,
+        bookingDate: editBookingDate.value,
         pax: editPax.value,
         totalAmount: editTotalAmount.value,
         status: editStatus.value,
@@ -261,7 +258,7 @@ Destination: ${booking.destination}
 Hotel: ${booking.hotelName || 'Not selected'}
 Transportation: ${booking.vehicleType ? `${booking.vehicleType} - ${booking.vehicleProvider}` : 'Not selected'}
 
-Travel Period: ${formatDate(booking.startDate)} - ${formatDate(booking.endDate)}
+Booking Date: ${formatDate(booking.startDate)}
 Number of Pax: ${booking.pax}
 
 Total Amount: PHP ${total.toLocaleString('en-PH', { minimumFractionDigits: 2 })}

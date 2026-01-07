@@ -1,36 +1,8 @@
 // Simple front-end behavior for the USER dashboard (no backend)
 
-// Demo recent bookings data
-const demoBookings = [
-  {
-    id: 3,
-    client: "Sunrise Corp.",
-    destination: "Bali, Indonesia",
-    package: "Bali 4D3N Christmas Tour",
-    startDate: "2025-12-25",
-    endDate: "2025-12-25",
-    status: "Completed"
-  },
-  {
-    id: 1,
-    client: "Carlos Ramirez",
-    destination: "Hokkaido, Japan",
-    package: "Hokkaido Icebreaker + Sapporo Snow F...",
-    startDate: "2026-02-02",
-    endDate: "2026-02-02",
-    status: "Upcoming"
-  },
-  {
-    id: 5,
-    client: "Andrea Bautista",
-    destination: "Hokkaido, Japan",
-    package: "Hokkaido Icebreaker + Sapporo Snow F...",
-    startDate: "2026-02-02",
-    endDate: "2026-02-02",
-    status: "Upcoming"
-  }
-];
 
+
+// DASHBOARD: Fetch and render recent bookings from API
 document.addEventListener("DOMContentLoaded", () => {
   // Show username if stored by login
   const userNameSpan = document.getElementById("userNameLabel");
@@ -39,26 +11,31 @@ document.addEventListener("DOMContentLoaded", () => {
     userNameSpan.textContent = storedName;
   }
 
-  // Populate bookings table
+  // Populate bookings table from API (recent only)
   const tbody = document.querySelector("#userBookingsTable tbody");
   if (tbody) {
-    demoBookings.forEach(b => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${b.id}</td>
-        <td>${b.client}</td>
-        <td>${b.destination}</td>
-        <td>${b.package}</td>
-        <td>${b.startDate}</td>
-        <td>${b.endDate}</td>
-        <td>
-          <span class="status-pill ${
-            b.status === "Completed" ? "status-completed" : "status-upcoming"
-          }">${b.status}</span>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
+    fetch("api/bookings_list.php?recent=1")
+      .then(res => res.json())
+      .then(data => {
+        tbody.innerHTML = "";
+        if (data.success && data.bookings && data.bookings.length) {
+          data.bookings.slice(0, 5).forEach(b => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${b.id}</td>
+              <td>${b.clientName || ""}</td>
+              <td>${b.destination || ""}</td>
+              <td>${b.packageName || ""}</td>
+              <td>${b.startDate || ""}</td>
+              <td>${b.endDate || ""}</td>
+              <td><span class="status-pill ${b.status === "Completed" ? "status-completed" : "status-upcoming"}">${b.status}</span></td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } else {
+          tbody.innerHTML = '<tr><td colspan="7">No bookings found.</td></tr>';
+        }
+      });
   }
 
   // Logout button
@@ -73,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // New booking buttons (banner + sidebar)
   document.querySelectorAll(".btn-banner-booking, .btn-new-booking").forEach(btn => {
     btn.addEventListener("click", () => {
-      alert("New Booking modal / page would open here (demo only).");
+      window.location.href = "Bookings/bookings1.html";
     });
   });
 });
@@ -86,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // New booking buttons (banner + sidebar)
   document.querySelectorAll(".btn-banner-booking, .btn-new-booking").forEach(btn => {
     btn.addEventListener("click", () => {
-      window.location.href = "userBooking-step1.html";   // <-- go to step 1 page
+      window.location.href = "Bookings/bookings1.html";   // <-- go to step 1 page
     });
   });
 
@@ -104,27 +81,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Bookings list page: reads bookings saved in localStorage by step 6
 
+
+// USER BOOKINGS PAGE: Fetch and render bookings from API
 document.addEventListener("DOMContentLoaded", () => {
   const tbody = document.querySelector("#bookingsTable tbody");
   const searchInput = document.getElementById("bookingsSearch");
   const searchBtn = document.getElementById("bookingsSearchBtn");
-
   const statTotal = document.getElementById("statTotal");
   const statConfirmed = document.getElementById("statConfirmed");
   const statCancelled = document.getElementById("statCancelled");
   const countLabel = document.getElementById("bookingsCountLabel");
 
-  const logoutBtn = document.getElementById("userLogoutBtn");
-  const sidebarNewBookingBtn = document.getElementById("sidebarNewBookingBtn");
-  const newBookingBtnTop = document.getElementById("newBookingBtnTop");
-
-  // Load all bookings
-  let bookings = JSON.parse(localStorage.getItem("cht_bookings") || "[]");
-  let filteredBookings = [...bookings];
+  let bookings = [];
+  let filteredBookings = [];
 
   function formatDate(iso) {
     if (!iso) return "";
-    // Display as e.g. Feb 02, 2026
     const d = new Date(iso);
     if (isNaN(d.getTime())) return iso;
     return d.toLocaleDateString("en-US", {
@@ -135,43 +107,34 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderStats() {
-    statTotal.textContent = bookings.length;
-
+    if (statTotal) statTotal.textContent = bookings.length;
     const confirmed = bookings.filter(b => b.status === "Confirmed").length;
     const cancelled = bookings.filter(b => b.status === "Cancelled").length;
-
-    statConfirmed.textContent = confirmed;
-    statCancelled.textContent = cancelled;
-
-    countLabel.textContent = `${bookings.length} booking(s)`;
+    if (statConfirmed) statConfirmed.textContent = confirmed;
+    if (statCancelled) statCancelled.textContent = cancelled;
+    if (countLabel) countLabel.textContent = `${bookings.length} booking(s)`;
   }
 
   function renderTable() {
+    if (!tbody) return;
     tbody.innerHTML = "";
     filteredBookings.forEach(b => {
-      const tr = document.createElement("tr");
       const statusClass =
         b.status === "Cancelled"
           ? "status-cancelled"
           : b.status === "Completed"
           ? "status-completed"
           : "status-upcoming";
-
+      const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${b.id}</td>
-        <td>${b.client}</td>
+        <td>${b.clientName || ""}</td>
         <td>${b.destination || ""}</td>
         <td>${b.packageName || ""}</td>
         <td>${formatDate(b.startDate)}</td>
         <td>${formatDate(b.endDate)}</td>
         <td>
-          <span class="status-pill-booking ${statusClass}">
-            ${b.status}
-          </span>
-        </td>
-        <td>
-          <button class="booking-action-btn" data-action="view" data-id="${b.id}">👁</button>
-          <button class="booking-action-btn" data-action="cancel" data-id="${b.id}">✖</button>
+          <span class="status-pill-booking ${statusClass}">${b.status}</span>
         </td>
       `;
       tbody.appendChild(tr);
@@ -184,7 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
       filteredBookings = [...bookings];
     } else {
       filteredBookings = bookings.filter(b =>
-        `${b.client} ${b.destination} ${b.packageName}`
+        `${b.clientName} ${b.destination} ${b.packageName}`
           .toLowerCase()
           .includes(q)
       );
@@ -192,67 +155,33 @@ document.addEventListener("DOMContentLoaded", () => {
     renderTable();
   }
 
+  // Fetch bookings from API
+  function fetchBookings() {
+    fetch("api/bookings_list.php")
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.bookings) {
+          bookings = data.bookings;
+          filteredBookings = [...bookings];
+          renderStats();
+          renderTable();
+        } else {
+          bookings = [];
+          filteredBookings = [];
+          renderStats();
+          renderTable();
+        }
+      });
+  }
+
   // Initial render
-  renderStats();
-  renderTable();
+  fetchBookings();
 
   // Search
-  searchBtn.addEventListener("click", applySearch);
-  searchInput.addEventListener("keyup", e => {
+  if (searchBtn) searchBtn.addEventListener("click", applySearch);
+  if (searchInput) searchInput.addEventListener("keyup", e => {
     if (e.key === "Enter") applySearch();
   });
-
-  // Actions (view / cancel – demo)
-  tbody.addEventListener("click", e => {
-    const btn = e.target.closest(".booking-action-btn");
-    if (!btn) return;
-
-    const id = btn.dataset.id;
-    const booking = bookings.find(b => b.id === id);
-    if (!booking) return;
-
-    const action = btn.dataset.action;
-    if (action === "view") {
-      alert(
-        `Booking ${booking.id}\nClient: ${booking.client}\nDestination: ${booking.destination}\nPackage: ${booking.packageName}\nStatus: ${booking.status}`
-      );
-    } else if (action === "cancel") {
-      if (booking.status === "Cancelled") {
-        alert("This booking is already cancelled.");
-        return;
-      }
-      const ok = confirm(
-        `Cancel booking ${booking.id} for ${booking.client}?`
-      );
-      if (!ok) return;
-
-      booking.status = "Cancelled";
-      // Save
-      localStorage.setItem("cht_bookings", JSON.stringify(bookings));
-
-      renderStats();
-      applySearch();
-    }
-  });
-
-  // New booking buttons
-  function goNewBooking() {
-    window.location.href = "/HTML/userDashboard/Bookings/bookings1.html";  // absolute from root
-  }
-  if (sidebarNewBookingBtn) {
-    sidebarNewBookingBtn.addEventListener("click", goNewBooking);
-  }
-  if (newBookingBtnTop) {
-    newBookingBtnTop.addEventListener("click", goNewBooking);
-  }
-
-  // Logout
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      localStorage.removeItem("cht_current_username");
-      window.location.href = "/HTML/login.html";
-    });
-  }
 });
 
 
@@ -339,6 +268,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderClients() {
+    if (!tbody) return;
     tbody.innerHTML = "";
     filteredClients.forEach(c => {
       const tr = document.createElement("tr");
@@ -473,7 +403,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // -------- Sidebar New Booking + Logout --------
   if (sidebarNewBookingBtn) {
     sidebarNewBookingBtn.addEventListener("click", () => {
-      window.location.href = "userBooking-step1.html";
+      window.location.href = "Bookings/bookings1.html";
     });
   }
   if (logoutBtn) {
@@ -562,6 +492,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderPackages() {
+    if (!grid) return;
     grid.innerHTML = "";
     filteredPackages.forEach(pkg => {
       const card = document.createElement("article");
@@ -627,7 +558,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Sidebar / logout
   if (sidebarNewBookingBtn) {
     sidebarNewBookingBtn.addEventListener("click", () => {
-      window.location.href = "userBooking-step1.html";
+      window.location.href = "Bookings/bookings1.html";
     });
   }
   if (logoutBtn) {
@@ -637,8 +568,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
-
-localStorage.setItem("cht_packages", JSON.stringify(packages));
 
 //userTrips.js
 
@@ -689,6 +618,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderTrips() {
+    if (!tbody) return;
     tbody.innerHTML = "";
     filteredTrips.forEach(t => {
       const tr = document.createElement("tr");
@@ -739,7 +669,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // New booking shortcut from sidebar
   if (sidebarNewBookingBtn) {
     sidebarNewBookingBtn.addEventListener("click", () => {
-      window.location.href = "userBooking-step1.html";
+      window.location.href = "Bookings/bookings1.html";
     });
   }
 
@@ -829,6 +759,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderHotels() {
+    if (!grid) return;
     grid.innerHTML = "";
     filteredHotels.forEach(h => {
       const card = document.createElement("article");
@@ -878,7 +809,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Sidebar New Booking
   if (sidebarNewBookingBtn) {
     sidebarNewBookingBtn.addEventListener("click", () => {
-      window.location.href = "userBooking-step1.html";
+      window.location.href = "Bookings/bookings1.html";
     });
   }
 
@@ -961,6 +892,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderVehicles() {
+    if (!tbody) return;
     tbody.innerHTML = "";
     filteredVehicles.forEach(v => {
       const tr = document.createElement("tr");
@@ -1000,7 +932,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // New booking from sidebar
   if (sidebarNewBookingBtn) {
     sidebarNewBookingBtn.addEventListener("click", () => {
-      window.location.href = "userBooking-step1.html";
+      window.location.href = "Bookings/bookings1.html";
     });
   }
 
@@ -1122,6 +1054,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // -------- Table --------
   function renderPayments() {
+    if (!tbody) return;
     tbody.innerHTML = "";
     filteredPayments.forEach(p => {
       const statusClass =
@@ -1232,7 +1165,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // -------- Sidebar / logout --------
   if (sidebarNewBookingBtn) {
     sidebarNewBookingBtn.addEventListener("click", () => {
-      window.location.href = "userBooking-step1.html";
+      window.location.href = "Bookings/bookings1.html";
     });
   }
 

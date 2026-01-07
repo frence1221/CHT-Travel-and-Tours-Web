@@ -1,13 +1,7 @@
 // Step 6: Review & Confirm
+// Saves booking to database via API
 
 document.addEventListener("DOMContentLoaded", () => {
-  const summaryCustomer = document.getElementById("summaryCustomer");
-  const summaryPackage = document.getElementById("summaryPackage");
-  const summaryHotel = document.getElementById("summaryHotel");
-  const summaryTransport = document.getElementById("summaryTransport");
-  const summaryTotal = document.getElementById("summaryTotal");
-  const summaryBreakdown = document.getElementById("summaryBreakdown");
-
   const reviewCustomer = document.getElementById("reviewCustomer");
   const reviewTravelDate = document.getElementById("reviewTravelDate");
   const reviewPackage = document.getElementById("reviewPackage");
@@ -17,226 +11,186 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const backBtn = document.getElementById("bookingBackBtn");
   const confirmBtn = document.getElementById("confirmBookingBtn");
-  const logoutBtn = document.getElementById("userLogoutBtn");
-  const sidebarNewBookingBtn = document.getElementById("sidebarNewBookingBtn");
   const agreeTerms = document.getElementById("agreeTerms");
   const termsError = document.getElementById("termsError");
 
-  let packagePrice = 0;
-  let addonsTotal = 0;
-  let hotelPrice = 0;
-  let transportPrice = 0;
+  // Load booking state
+  let state = BookingState.get();
+  
+  // Debug: log the state to console
+  console.log('Booking State on Step 6:', state);
 
-  let customerData = {};
-  let packageData = {};
-  let addonsData = {};
-  let hotelData = {};
-  let transportData = {};
+  // Update summary sidebar
+  BookingState.populateSummary();
 
-  // -------- Helpers --------
-  function formatPHP(amount) {
-    return "₱" + amount.toLocaleString("en-PH", { minimumFractionDigits: 0 });
-  }
+  // Populate review section
+  function populateReview() {
+    // Customer
+    if (reviewCustomer) {
+      reviewCustomer.textContent = state.customer.name 
+        ? `${state.customer.name} (${state.customer.pax || 1} pax)` 
+        : 'Not set';
+    }
 
-  // -------- Load data from previous steps --------
+    // Travel date
+    if (reviewTravelDate) {
+      const today = new Date().toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      reviewTravelDate.textContent = today;
+    }
 
-  // Step 1
-  const s1 = localStorage.getItem("cht_booking_step1");
-  if (s1) {
-    try {
-      customerData = JSON.parse(s1);
-      const pax = customerData.pax || 1;
-      const display = customerData.fullName
-        ? `${customerData.fullName} (${pax} pax)`
-        : "Not set";
+    // Package
+    if (reviewPackage) {
+      reviewPackage.textContent = state.package.name 
+        ? `${state.package.name} - ${state.package.duration || 0} Days` 
+        : 'Not selected';
+    }
 
-      summaryCustomer.textContent = display;
-      reviewCustomer.textContent = display;
+    // Hotel
+    if (reviewHotel) {
+      reviewHotel.textContent = state.hotel.name 
+        ? `${state.hotel.name} (${state.hotel.roomType || 'Standard'})` 
+        : 'Not selected';
+    }
 
-      const travelDate =
-        customerData.travelDate || new Date().toISOString().slice(0, 10);
-      reviewTravelDate.textContent = travelDate;
-    } catch {
-      summaryCustomer.textContent = "Not set";
-      reviewCustomer.textContent = "Not set";
-      reviewTravelDate.textContent = "Not set";
+    // Transport
+    if (reviewTransport) {
+      reviewTransport.textContent = state.transport.type 
+        ? `${state.transport.type} - ${state.transport.provider || 'CHT Transport'}` 
+        : 'Not selected';
+    }
+
+    // Total amount
+    if (reviewTotalAmount) {
+      const total = BookingState.calculateTotal();
+      reviewTotalAmount.textContent = `PHP ${total.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
     }
   }
 
-  // Step 2
-  const s2 = localStorage.getItem("cht_booking_step2");
-  if (s2) {
-    try {
-      packageData = JSON.parse(s2);
-      packagePrice = Number(packageData.price) || 0;
-      summaryPackage.textContent = packageData.packageName || "Not selected";
-      reviewPackage.textContent = packageData.packageName || "Not selected";
-    } catch {
-      summaryPackage.textContent = "Not selected";
-      reviewPackage.textContent = "Not selected";
-    }
-  }
+  populateReview();
 
-  // Step 3
-  const s3 = localStorage.getItem("cht_booking_step3");
-  if (s3) {
-    try {
-      addonsData = JSON.parse(s3);
-      const addonIds = addonsData.addonIds || [];
-      const addonPriceMap = {
-        breakfast: 500,
-        insurance: 1000,
-        guide: 2000,
-        airport: 800
-      };
-      addonsTotal = addonIds.reduce(
-        (sum, id) => sum + (addonPriceMap[id] || 0),
-        0
-      );
-    } catch {
-      addonsData = {};
-      addonsTotal = 0;
-    }
-  }
-
-  // Step 4
-  const s4 = localStorage.getItem("cht_booking_step4");
-  if (s4) {
-    try {
-      hotelData = JSON.parse(s4);
-      hotelPrice = Number(hotelData.hotelPricePerNight) || 0;
-      if (hotelData.hotelName) {
-        summaryHotel.textContent = hotelData.hotelName;
-        reviewHotel.textContent = hotelData.hotelName;
-      } else {
-        summaryHotel.textContent = "Not selected";
-        reviewHotel.textContent = "Not selected";
-      }
-    } catch {
-      hotelData = {};
-      summaryHotel.textContent = "Not selected";
-      reviewHotel.textContent = "Not selected";
-    }
-  }
-
-  // Step 5
-  const s5 = localStorage.getItem("cht_booking_step5");
-  if (s5) {
-    try {
-      transportData = JSON.parse(s5);
-      transportPrice = Number(transportData.pricePerDay) || 0;
-      const label = transportData.label
-        ? `${transportData.label}${
-            transportData.company ? " - " + transportData.company : ""
-          }`
-        : "Not selected";
-      summaryTransport.textContent = label;
-      reviewTransport.textContent = label;
-    } catch {
-      transportData = {};
-      summaryTransport.textContent = "Not selected";
-      reviewTransport.textContent = "Not selected";
-    }
-  }
-
-  // -------- Totals --------
-  function updateTotals() {
-    const total = packagePrice + addonsTotal + hotelPrice + transportPrice;
-    summaryTotal.textContent = formatPHP(total);
-    reviewTotalAmount.textContent =
-      "PHP " + total.toLocaleString("en-PH", { minimumFractionDigits: 2 });
-
-    summaryBreakdown.textContent =
-      "Package: " +
-      formatPHP(packagePrice) +
-      (addonsTotal ? `, Add-ons: ${formatPHP(addonsTotal)}` : "") +
-      (hotelPrice ? `, Hotel: ${formatPHP(hotelPrice)}` : "") +
-      (transportPrice ? `, Transport: ${formatPHP(transportPrice)}` : "");
-  }
-  updateTotals();
-
-  // -------- Booking object builder --------
-  function buildBookingObject() {
-    const total =
-      packagePrice + addonsTotal + hotelPrice + transportPrice;
-
-    // Simple ID like BK-0001, BK-0002...
-    const all = JSON.parse(localStorage.getItem("cht_bookings") || "[]");
-    const nextNumber = all.length ? all.length + 1 : 1;
-    const id = "BK-" + String(nextNumber).padStart(4, "0");
-
-    const today = new Date().toISOString().slice(0, 10);
-
-    return {
-      id, // booking code
-      client: customerData.fullName || "Unnamed Client",
-      destination: customerData.destination || customerData.custDestination || "",
-      packageName: packageData.packageName || "N/A",
-      startDate: today,              // for demo; you can change to real travel date
-      endDate: today,                // for demo
-      status: "Upcoming",            // default status
-      totalAmount: total,
-      packagePrice,
-      addonsTotal,
-      hotelPrice,
-      transportPrice
-    };
-  }
-
-  // -------- Navigation & confirm --------
+  // Back button
   if (backBtn) {
-    backBtn.addEventListener("click", () => {
-      window.location.href = "userBooking-step5.html";
+    backBtn.addEventListener('click', () => {
+      window.location.href = 'bookings5.html';
     });
   }
 
+  // Terms checkbox
+  if (agreeTerms) {
+    agreeTerms.addEventListener('change', () => {
+      if (agreeTerms.checked && termsError) {
+        termsError.classList.add('hidden');
+      }
+    });
+  }
+
+  // Confirm button
   if (confirmBtn) {
-    confirmBtn.addEventListener("click", () => {
-      if (!agreeTerms.checked) {
-        termsError.classList.remove("hidden");
+    confirmBtn.addEventListener('click', async () => {
+      // Reload state to get latest data
+      state = BookingState.get();
+      console.log('State before confirm:', state);
+
+      // Validate required selections
+      if (!state.customer.id) {
+        alert('Please select a customer first.\n\nGo back to Step 1 to select a customer.');
         return;
       }
-      termsError.classList.add("hidden");
 
-      // Confirmation dialog
-      const ok = confirm("Are you sure you want to confirm this booking?");
-      if (!ok) return;
+      if (!state.package.id) {
+        alert('Please select a package first.\n\nGo back to Step 2 to select a tour package.');
+        return;
+      }
 
-      const booking = buildBookingObject();
+      // Validate terms agreement
+      if (!agreeTerms || !agreeTerms.checked) {
+        if (termsError) {
+          termsError.classList.remove('hidden');
+        }
+        return;
+      }
 
-      // Save to localStorage array
-      const stored = JSON.parse(localStorage.getItem("cht_bookings") || "[]");
-      stored.push(booking);
-      localStorage.setItem("cht_bookings", JSON.stringify(stored));
+      if (termsError) {
+        termsError.classList.add('hidden');
+      }
 
-      // Clear step data for next booking
-      localStorage.removeItem("cht_booking_step1");
-      localStorage.removeItem("cht_booking_step2");
-      localStorage.removeItem("cht_booking_step3");
-      localStorage.removeItem("cht_booking_step4");
-      localStorage.removeItem("cht_booking_step5");
+      // Confirm dialog
+      if (!confirm('Are you sure you want to confirm this booking?')) {
+        return;
+      }
 
-      // Go to bookings list
-      window.location.href = "userBookings.html";
-    });
-  }
+      // Disable button to prevent double submission
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = 'Processing...';
 
-  // Logout & sidebar
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      localStorage.removeItem("cht_current_username");
-      window.location.href = "login.html";
-    });
-  }
-  if (sidebarNewBookingBtn) {
-    sidebarNewBookingBtn.addEventListener("click", () => {
-      window.location.href = "userBooking-step1.html";
-    });
-  }
+      try {
+        // Prepare booking data
+        const today = new Date().toISOString().slice(0, 10);
+        const duration = state.package.duration || 1;
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + duration);
 
-  if (agreeTerms) {
-    agreeTerms.addEventListener("change", () => {
-      if (agreeTerms.checked) termsError.classList.add("hidden");
+        const bookingData = {
+          clientId: state.customer.id,
+          packageId: state.package.id,
+          accommodationId: state.hotel.id || null,
+          vehicleId: state.transport.id || null,
+          startDate: today,
+          endDate: endDate.toISOString().slice(0, 10),
+          numberOfPax: state.customer.pax || 1,
+          totalAmount: BookingState.calculateTotal(),
+          status: 'Pending',
+          specialRequests: state.addons.specialRequests || '',
+          addons: state.addons.selectedIds || []
+        };
+
+        console.log('Booking data to send:', bookingData);
+
+        // Send to API
+        const response = await fetch('../api/bookings_save.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(bookingData)
+        });
+
+        console.log('Response status:', response.status);
+        const responseText = await response.text();
+        console.log('Response text:', responseText);
+        
+        let result;
+        try {
+          result = JSON.parse(responseText);
+        } catch (e) {
+          throw new Error('Invalid response from server: ' + responseText);
+        }
+
+        if (result.success) {
+          // Clear booking state
+          BookingState.clear();
+
+          // Show success message
+          alert(`Booking confirmed successfully!\n\nBooking Reference: ${result.bookingRef}\n\nThank you for booking with CHT Travel & Tours!`);
+
+          // Redirect to bookings list
+          window.location.href = '../userBookings.html';
+        } else {
+          throw new Error(result.error || 'Failed to save booking');
+        }
+      } catch (error) {
+        console.error('Error saving booking:', error);
+        alert('Failed to confirm booking. Please try again.\n\nError: ' + error.message);
+        
+        // Re-enable button
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = 'Confirm Booking →';
+      }
     });
   }
 });

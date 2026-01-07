@@ -9,7 +9,13 @@ $name      = trim($_POST['name'] ?? '');
 $email     = trim($_POST['email'] ?? '');
 $contact   = trim($_POST['contact'] ?? '');
 $address   = trim($_POST['address'] ?? '');
-$type      = trim($_POST['type'] ?? 'REGULAR');
+$type      = trim($_POST['type'] ?? 'Business');
+
+// Validate customerType
+$allowedTypes = ['Business', 'Leisure'];
+if (!in_array($type, $allowedTypes)) {
+    $type = 'Business';
+}
 
 if ($name === '') {
     http_response_code(400);

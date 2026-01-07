@@ -1,194 +1,145 @@
 // Step 3: Add-ons
+// Loads add-ons from database via API
 
 document.addEventListener("DOMContentLoaded", () => {
   const addonsListEl = document.getElementById("addonsList");
   const specialRequestsEl = document.getElementById("specialRequests");
-
-  const summaryCustomer = document.getElementById("summaryCustomer");
-  const summaryPackage = document.getElementById("summaryPackage");
-  const summaryTotal = document.getElementById("summaryTotal");
-  const summaryBreakdown = document.getElementById("summaryBreakdown");
-
   const backBtn = document.getElementById("bookingBackBtn");
   const nextBtn = document.getElementById("bookingNextBtn");
-  const logoutBtn = document.getElementById("userLogoutBtn");
-  const sidebarNewBookingBtn = document.getElementById("sidebarNewBookingBtn");
 
-  // ---- Load previous steps data from localStorage ----
-  let packagePrice = 0;
+  let addons = [];
+  let selectedAddonIds = [];
 
-  const step1Raw = localStorage.getItem("cht_booking_step1");
-  if (step1Raw && summaryCustomer) {
-    try {
-      const c = JSON.parse(step1Raw);
-      const display = c.fullName
-        ? `${c.fullName} (${c.pax || 1} pax)`
-        : "Not set";
-      summaryCustomer.textContent = display;
-    } catch {
-      summaryCustomer.textContent = "Not set";
-    }
+  // Load existing state
+  const state = BookingState.get();
+  selectedAddonIds = state.addons.selectedIds || [];
+  if (specialRequestsEl && state.addons.specialRequests) {
+    specialRequestsEl.value = state.addons.specialRequests;
   }
 
-  const step2Raw = localStorage.getItem("cht_booking_step2");
-  if (step2Raw && summaryPackage) {
+  // Update summary
+  BookingState.populateSummary();
+
+  // Fetch add-ons from database
+  async function loadAddons() {
     try {
-      const p = JSON.parse(step2Raw);
-      summaryPackage.textContent = p.packageName || "Not selected";
-      packagePrice = Number(p.price) || 0;
-    } catch {
-      summaryPackage.textContent = "Not selected";
-    }
-  }
-
-  // ---- Define available add-ons ----
-  const addons = [
-    {
-      id: "breakfast",
-      name: "Daily Breakfast",
-      description: "Start each day with a delicious buffet breakfast",
-      price: 500
-    },
-    {
-      id: "insurance",
-      name: "Travel Insurance",
-      description: "Comprehensive coverage for peace of mind",
-      price: 1000
-    },
-    {
-      id: "guide",
-      name: "Private Tour Guide",
-      description: "Personalized guided tours with local expert",
-      price: 2000
-    },
-    {
-      id: "airport",
-      name: "Airport Transfer",
-      description: "Convenient pickup and drop-off service",
-      price: 800
-    }
-  ];
-
-  let selectedAddons = [];
-
-  // If we already saved step 3 before, restore it
-  const step3Raw = localStorage.getItem("cht_booking_step3");
-  if (step3Raw) {
-    try {
-      const s3 = JSON.parse(step3Raw);
-      selectedAddons = s3.addonIds || [];
-      if (s3.specialRequests && specialRequestsEl) {
-        specialRequestsEl.value = s3.specialRequests;
+      addonsListEl.innerHTML = '<div class="loading">Loading add-ons...</div>';
+      
+      const response = await fetch('../api/addons_list.php');
+      const data = await response.json();
+      
+      if (data.success && data.addons.length > 0) {
+        addons = data.addons;
+        renderAddons();
+      } else {
+        // Use default add-ons if none in database
+        addons = [
+          { id: 1, name: 'Daily Breakfast', description: 'Start each day with a delicious buffet breakfast', price: 500 },
+          { id: 2, name: 'Travel Insurance', description: 'Comprehensive coverage for peace of mind', price: 1000 },
+          { id: 3, name: 'Private Tour Guide', description: 'Personalized guided tours with local expert', price: 2000 },
+          { id: 4, name: 'Airport Transfer', description: 'Convenient pickup and drop-off service', price: 800 }
+        ];
+        renderAddons();
       }
-    } catch {
-      selectedAddons = [];
+    } catch (error) {
+      console.error('Error loading add-ons:', error);
+      // Use default add-ons on error
+      addons = [
+        { id: 1, name: 'Daily Breakfast', description: 'Start each day with a delicious buffet breakfast', price: 500 },
+        { id: 2, name: 'Travel Insurance', description: 'Comprehensive coverage for peace of mind', price: 1000 },
+        { id: 3, name: 'Private Tour Guide', description: 'Personalized guided tours with local expert', price: 2000 },
+        { id: 4, name: 'Airport Transfer', description: 'Convenient pickup and drop-off service', price: 800 }
+      ];
+      renderAddons();
     }
   }
 
-  // ---- Render add-on rows ----
+  // Render add-on rows
   function renderAddons() {
-    addonsListEl.innerHTML = "";
-    addons.forEach(addon => {
-      const row = document.createElement("div");
-      row.className = "addon-row";
-
-      const checked = selectedAddons.includes(addon.id);
-
-      row.innerHTML = `
-        <div class="addon-row-left">
-          <input
-            type="checkbox"
-            class="addon-checkbox"
-            id="addon-${addon.id}"
-            data-id="${addon.id}"
-            ${checked ? "checked" : ""}
-          >
-          <div class="addon-text">
-            <span class="addon-name">${addon.name}</span>
-            <span class="addon-desc">${addon.description}</span>
+    addonsListEl.innerHTML = addons.map(addon => {
+      const isChecked = selectedAddonIds.includes(addon.id);
+      return `
+        <div class="addon-row">
+          <div class="addon-row-left">
+            <input type="checkbox" class="addon-checkbox" id="addon-${addon.id}" data-id="${addon.id}" ${isChecked ? 'checked' : ''}>
+            <div class="addon-text">
+              <span class="addon-name">${addon.name}</span>
+              <span class="addon-desc">${addon.description}</span>
+            </div>
           </div>
+          <div class="addon-price">+₱${Number(addon.price).toLocaleString()}</div>
         </div>
-        <div class="addon-price">+₱${addon.price.toLocaleString()}</div>
       `;
-
-      addonsListEl.appendChild(row);
-    });
+    }).join('');
   }
 
-  renderAddons();
-  updateTotals();
-
-  // ---- Handle checkbox changes ----
-  addonsListEl.addEventListener("change", e => {
-    const checkbox = e.target.closest(".addon-checkbox");
-    if (!checkbox) return;
-
-    const id = checkbox.dataset.id;
-    if (checkbox.checked) {
-      if (!selectedAddons.includes(id)) selectedAddons.push(id);
-    } else {
-      selectedAddons = selectedAddons.filter(a => a !== id);
-    }
-    updateTotals();
-  });
-
-  // ---- Update total / breakdown ----
-  function updateTotals() {
-    const addonsTotal = selectedAddons.reduce((sum, id) => {
+  // Calculate add-ons total
+  function calculateAddonsTotal() {
+    return selectedAddonIds.reduce((sum, id) => {
       const addon = addons.find(a => a.id === id);
-      return sum + (addon ? addon.price : 0);
+      return sum + (addon ? Number(addon.price) : 0);
     }, 0);
-
-    const total = packagePrice + addonsTotal;
-
-    if (summaryTotal) {
-      summaryTotal.textContent =
-        "₱" + total.toLocaleString("en-PH", { minimumFractionDigits: 0 });
-    }
-
-    if (summaryBreakdown) {
-      summaryBreakdown.textContent =
-        "Package: ₱" +
-        packagePrice.toLocaleString("en-PH") +
-        (addonsTotal
-          ? `, Add-ons: ₱${addonsTotal.toLocaleString("en-PH")}`
-          : "");
-    }
   }
 
-  // ---- Navigation buttons ----
+  // Handle checkbox changes
+  if (addonsListEl) {
+    addonsListEl.addEventListener('change', (e) => {
+      const checkbox = e.target.closest('.addon-checkbox');
+      if (!checkbox) return;
+
+      const id = parseInt(checkbox.dataset.id);
+      
+      if (checkbox.checked) {
+        if (!selectedAddonIds.includes(id)) {
+          selectedAddonIds.push(id);
+        }
+      } else {
+        selectedAddonIds = selectedAddonIds.filter(a => a !== id);
+      }
+
+      // Save to state
+      BookingState.updateStep('addons', {
+        selectedIds: selectedAddonIds,
+        totalPrice: calculateAddonsTotal()
+      });
+      BookingState.populateSummary();
+    });
+  }
+
+  // Handle special requests input
+  if (specialRequestsEl) {
+    specialRequestsEl.addEventListener('input', () => {
+      BookingState.updateStep('addons', {
+        specialRequests: specialRequestsEl.value
+      });
+    });
+  }
+
+  // Back button
   if (backBtn) {
-    backBtn.addEventListener("click", () => {
-      window.location.href = "userBooking-step2.html";
+    backBtn.addEventListener('click', () => {
+      window.location.href = 'bookings2.html';
     });
   }
 
-    if (nextBtn) {
-    nextBtn.addEventListener("click", () => {
-      const payload = {
-        addonIds: selectedAddons,
-        specialRequests: specialRequestsEl.value || ""
-      };
-      localStorage.setItem("cht_booking_step3", JSON.stringify(payload));
+  // Next button
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      // Save final add-ons state
+      BookingState.updateStep('addons', {
+        selectedIds: selectedAddonIds,
+        specialRequests: specialRequestsEl ? specialRequestsEl.value : '',
+        totalPrice: calculateAddonsTotal()
+      });
 
-      // Go to Step 4 (Hotel)
-      window.location.href = "../../../HTML/userDashboard/Bookings/bookings4.html";
+      const currentState = BookingState.get();
+      currentState.currentStep = 4;
+      BookingState.save(currentState);
+
+      window.location.href = 'bookings4.html';
     });
   }
 
-  // Logout & sidebar behavior
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      localStorage.removeItem("cht_current_username");
-      window.location.href = "login.html";
-    });
-  }
-  if (sidebarNewBookingBtn) {
-    sidebarNewBookingBtn.addEventListener("click", () => {
-      window.location.href = "userBooking-step1.html";
-    });
-  }
-}); 
-
-//update
-
+  // Load add-ons on page load
+  loadAddons();
+});

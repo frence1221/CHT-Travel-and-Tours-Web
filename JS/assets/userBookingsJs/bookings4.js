@@ -1,253 +1,176 @@
-// Step 4: Hotel selection
+// Step 4: Hotel Selection
+// Loads hotels from accommodation table in database via API
 
 document.addEventListener("DOMContentLoaded", () => {
   const hotelListInner = document.getElementById("hotelListInner");
-
-  const summaryCustomer = document.getElementById("summaryCustomer");
-  const summaryPackage = document.getElementById("summaryPackage");
-  const summaryHotel = document.getElementById("summaryHotel");
-  const summaryTotal = document.getElementById("summaryTotal");
-  const summaryBreakdown = document.getElementById("summaryBreakdown");
-
   const backBtn = document.getElementById("bookingBackBtn");
   const nextBtn = document.getElementById("bookingNextBtn");
-  const logoutBtn = document.getElementById("userLogoutBtn");
-  const sidebarNewBookingBtn = document.getElementById("sidebarNewBookingBtn");
 
-  // ---- Load data from previous steps ----
-  let packagePrice = 0;
-  let addonsTotal = 0;
-
-  // Step 1: customer
-  const s1 = localStorage.getItem("cht_booking_step1");
-  if (s1 && summaryCustomer) {
-    try {
-      const c = JSON.parse(s1);
-      const display = c.fullName
-        ? `${c.fullName} (${c.pax || 1} pax)`
-        : "Not set";
-      summaryCustomer.textContent = display;
-    } catch {
-      summaryCustomer.textContent = "Not set";
-    }
-  }
-
-  // Step 2: package
-  const s2 = localStorage.getItem("cht_booking_step2");
-  if (s2 && summaryPackage) {
-    try {
-      const p = JSON.parse(s2);
-      summaryPackage.textContent = p.packageName || "Not selected";
-      packagePrice = Number(p.price) || 0;
-    } catch {
-      summaryPackage.textContent = "Not selected";
-    }
-  }
-
-  // Step 3: add-ons
-  const s3 = localStorage.getItem("cht_booking_step3");
-  if (s3) {
-    try {
-      const saved = JSON.parse(s3);
-      const addonIds = saved.addonIds || [];
-      // you can keep the list & prices in one place; here we re‑use the same mapping
-      const addonPriceMap = {
-        breakfast: 500,
-        insurance: 1000,
-        guide: 2000,
-        airport: 800
-      };
-      addonsTotal = addonIds.reduce(
-        (sum, id) => sum + (addonPriceMap[id] || 0),
-        0
-      );
-    } catch {
-      addonsTotal = 0;
-    }
-  }
-
-  // Previously selected hotel (if user comes back)
+  let hotels = [];
   let selectedHotelId = null;
-  const savedHotelRaw = localStorage.getItem("cht_booking_step4");
-  if (savedHotelRaw) {
+
+  // Load existing state
+  const state = BookingState.get();
+  if (state.hotel.id) {
+    selectedHotelId = state.hotel.id;
+  }
+
+  // Update summary
+  BookingState.populateSummary();
+
+  // Fetch hotels from database (accommodation table)
+  async function loadHotels() {
     try {
-      const savedHotel = JSON.parse(savedHotelRaw);
-      selectedHotelId = savedHotel.hotelId || null;
-    } catch {
-      selectedHotelId = null;
+      hotelListInner.innerHTML = '<div class="loading">Loading hotels...</div>';
+      
+      const response = await fetch('../api/hotels_list.php');
+      const data = await response.json();
+      
+      if (data.success && data.hotels.length > 0) {
+        hotels = data.hotels.map(h => ({
+          id: h.id,
+          name: h.name,
+          address: h.address,
+          contact: h.contact,
+          amenities: h.amenities,
+          numberOfRooms: h.numberOfRooms,
+          roomType: h.roomType || 'Standard Room',
+          rating: estimateRating(h.amenities),
+          pricePerNight: h.pricePerNight || estimatePrice(h.roomType)
+        }));
+        renderHotels();
+      } else {
+        hotelListInner.innerHTML = '<div class="no-data">No hotels available. Please add hotels first.</div>';
+      }
+    } catch (error) {
+      console.error('Error loading hotels:', error);
+      hotelListInner.innerHTML = '<div class="error">Failed to load hotels. Please try again.</div>';
     }
   }
 
-  // ---- Demo hotel data ----
-  const hotels = [
-    {
-      id: 1,
-      name: "Sapporo Snow Hotel",
-      rating: 4,
-      location: "Sapporo, Hokkaido",
-      roomType: "Standard Room",
-      features: "WiFi • Breakfast • Heater",
-      pricePerNight: 2500
-    },
-    {
-      id: 2,
-      name: "Hong Kong City Hotel",
-      rating: 3,
-      location: "Kowloon, Hong Kong",
-      roomType: "Standard Room",
-      features: "WiFi • Breakfast",
-      pricePerNight: 2500
-    },
-    {
-      id: 3,
-      name: "Bali Beach Resort",
-      rating: 5,
-      location: "Kuta, Bali",
-      roomType: "Deluxe Room",
-      features: "Pool • Beachfront • WiFi",
-      pricePerNight: 6500
-    },
-    {
-      id: 4,
-      name: "Taipei Downtown Hotel",
-      rating: 3,
-      location: "Taipei",
-      roomType: "Standard Room",
-      features: "WiFi",
-      pricePerNight: 2500
-    }
-  ];
+  // Estimate rating based on amenities (for display purposes)
+  function estimateRating(amenities) {
+    if (!amenities) return 3;
+    const amenityCount = amenities.split(',').length;
+    if (amenityCount >= 5) return 5;
+    if (amenityCount >= 3) return 4;
+    return 3;
+  }
 
-  // ---- Render hotel rows ----
-  function renderHotels(filterRating = "all") {
-    hotelListInner.innerHTML = "";
-    hotels.forEach(hotel => {
-      if (filterRating !== "all" && hotel.rating !== Number(filterRating)) {
-        return;
+  // Estimate price based on room type (default pricing)
+  function estimatePrice(roomType) {
+    const prices = {
+      'Deluxe': 5000,
+      'Suite': 8000,
+      'Standard': 2500,
+      'Superior': 3500
+    };
+    for (const [key, price] of Object.entries(prices)) {
+      if (roomType && roomType.toLowerCase().includes(key.toLowerCase())) {
+        return price;
       }
+    }
+    return 2500; // Default price
+  }
 
-      const row = document.createElement("div");
-      row.className =
-        "hotel-row" + (hotel.id === selectedHotelId ? " selected" : "");
-      row.dataset.id = hotel.id;
+  // Render hotel rows
+  function renderHotels(filterRating = "all") {
+    if (!hotels.length) {
+      hotelListInner.innerHTML = '<div class="no-data">No hotels match the filter.</div>';
+      return;
+    }
 
-      // simple star rendering
-      const stars = "★★★★★".slice(0, hotel.rating);
+    const filtered = filterRating === "all" 
+      ? hotels 
+      : hotels.filter(h => h.rating === parseInt(filterRating));
 
-      row.innerHTML = `
-        <div class="hotel-row-left">
-          <div class="hotel-name">${hotel.name}</div>
-          <div class="hotel-rating">${stars}</div>
-          <div class="hotel-location">📍 ${hotel.location}</div>
-          <div class="hotel-room">🛏 ${hotel.roomType}</div>
-          <div class="hotel-features">
-            <span>${hotel.features}</span>
+    if (!filtered.length) {
+      hotelListInner.innerHTML = '<div class="no-data">No hotels match the selected rating.</div>';
+      return;
+    }
+
+    hotelListInner.innerHTML = filtered.map(hotel => {
+      const stars = "★".repeat(hotel.rating) + "☆".repeat(5 - hotel.rating);
+      return `
+        <div class="hotel-row ${hotel.id === selectedHotelId ? 'selected' : ''}" data-id="${hotel.id}">
+          <div class="hotel-row-left">
+            <div class="hotel-name">${hotel.name}</div>
+            <div class="hotel-rating">${stars}</div>
+            <div class="hotel-location">📍 ${hotel.address || 'Location not specified'}</div>
+            <div class="hotel-room">🛏 ${hotel.roomType}</div>
+            <div class="hotel-features">
+              <span>${hotel.amenities || 'WiFi • AC'}</span>
+            </div>
+            ${hotel.numberOfRooms ? `<div class="hotel-rooms">🏨 ${hotel.numberOfRooms} rooms available</div>` : ''}
+          </div>
+          <div class="hotel-price-block">
+            <div class="hotel-price">PHP ${hotel.pricePerNight.toLocaleString()}</div>
+            <div>per night</div>
+            <button class="hotel-select-btn">${hotel.id === selectedHotelId ? '✓ Selected' : 'Select'}</button>
           </div>
         </div>
-        <div class="hotel-price-block">
-          <div class="hotel-price">PHP ${hotel.pricePerNight.toLocaleString()}</div>
-          <div>per night</div>
-          <button class="hotel-select-btn">Select</button>
-        </div>
       `;
-      hotelListInner.appendChild(row);
-    });
+    }).join('');
   }
 
-  renderHotels();
-
-  // ---- Rating filter (visual only for now) ----
+  // Handle rating filter
   document.querySelectorAll('input[name="ratingFilter"]').forEach(radio => {
     radio.addEventListener("change", () => {
       renderHotels(radio.value);
     });
   });
 
-  // ---- Selection handling ----
-  hotelListInner.addEventListener("click", e => {
-    const row = e.target.closest(".hotel-row");
-    if (!row) return;
-    const id = Number(row.dataset.id);
-    selectedHotelId = id;
-    renderHotels(
-      document.querySelector('input[name="ratingFilter"]:checked').value
-    );
-    updateSummary();
-  });
+  // Handle hotel selection
+  if (hotelListInner) {
+    hotelListInner.addEventListener('click', (e) => {
+      const row = e.target.closest('.hotel-row');
+      if (!row) return;
 
-  function updateSummary() {
-    const hotel = hotels.find(h => h.id === selectedHotelId);
-    const hotelPrice = hotel ? hotel.pricePerNight : 0;
-
-    if (summaryHotel) {
-      summaryHotel.textContent = hotel
-        ? `${hotel.name} (PHP ${hotel.pricePerNight.toLocaleString()} / night)`
-        : "Not selected";
-    }
-
-    const total = packagePrice + addonsTotal + hotelPrice;
-    if (summaryTotal) {
-      summaryTotal.textContent =
-        "₱" + total.toLocaleString("en-PH", { minimumFractionDigits: 0 });
-    }
-
-    if (summaryBreakdown) {
-      summaryBreakdown.textContent =
-        "Package: ₱" +
-        packagePrice.toLocaleString("en-PH") +
-        (addonsTotal
-          ? `, Add-ons: ₱${addonsTotal.toLocaleString("en-PH")}`
-          : "") +
-        (hotelPrice ? `, Hotel: ₱${hotelPrice.toLocaleString("en-PH")}` : "");
-    }
-  }
-
-  // Initialize summary with current selection (if any)
-  updateSummary();
-
-  // ---- Navigation buttons ----
-  if (backBtn) {
-    backBtn.addEventListener("click", () => {
-      window.location.href = "userBooking-step3.html";
+      const id = parseInt(row.dataset.id);
+      selectedHotelId = id;
+      
+      const hotel = hotels.find(h => h.id === id);
+      if (hotel) {
+        BookingState.updateStep('hotel', {
+          id: hotel.id,
+          name: hotel.name,
+          address: hotel.address,
+          roomType: hotel.roomType,
+          pricePerNight: hotel.pricePerNight,
+          rating: hotel.rating
+        });
+        BookingState.populateSummary();
+      }
+      
+      const currentFilter = document.querySelector('input[name="ratingFilter"]:checked')?.value || "all";
+      renderHotels(currentFilter);
     });
   }
 
-   if (nextBtn) {
-    nextBtn.addEventListener("click", () => {
+  // Back button
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      window.location.href = 'bookings3.html';
+    });
+  }
+
+  // Next button
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
       if (!selectedHotelId) {
-        if (!confirm("No hotel selected. Continue without hotel?")) {
+        if (!confirm('No hotel selected. Continue without hotel accommodation?')) {
           return;
         }
       }
-      const hotel = hotels.find(h => h.id === selectedHotelId) || null;
-      localStorage.setItem(
-        "cht_booking_step4",
-        JSON.stringify({
-          hotelId: hotel ? hotel.id : null,
-          hotelName: hotel ? hotel.name : null,
-          hotelPricePerNight: hotel ? hotel.pricePerNight : 0
-        })
-      );
 
-      // Go to Step 5 (Transport)
-      window.location.href = "../../../HTML/userDashboard/Bookings/bookings5.html";
+      const currentState = BookingState.get();
+      currentState.currentStep = 5;
+      BookingState.save(currentState);
+
+      window.location.href = 'bookings5.html';
     });
   }
 
-  // ---- Logout & sidebar ----
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      localStorage.removeItem("cht_current_username");
-      window.location.href = "login.html";
-    });
-  }
-  if (sidebarNewBookingBtn) {
-    sidebarNewBookingBtn.addEventListener("click", () => {
-      window.location.href = "userBooking-step1.html";
-    });
-  }
+  // Load hotels on page load
+  loadHotels();
 });
-
-//update
-
- 

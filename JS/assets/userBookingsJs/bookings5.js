@@ -1,266 +1,177 @@
-// Step 5: Choose Transportation
+// Step 5: Transportation Selection
+// Loads vehicles from vehicle table in database via API
 
 document.addEventListener("DOMContentLoaded", () => {
   const transportListInner = document.getElementById("transportListInner");
-
-  const summaryCustomer = document.getElementById("summaryCustomer");
-  const summaryPackage = document.getElementById("summaryPackage");
-  const summaryHotel = document.getElementById("summaryHotel");
-  const summaryTransport = document.getElementById("summaryTransport");
-  const summaryTotal = document.getElementById("summaryTotal");
-  const summaryBreakdown = document.getElementById("summaryBreakdown");
-
   const backBtn = document.getElementById("bookingBackBtn");
   const nextBtn = document.getElementById("bookingNextBtn");
-  const logoutBtn = document.getElementById("userLogoutBtn");
-  const sidebarNewBookingBtn = document.getElementById("sidebarNewBookingBtn");
 
-  // ---- Load previous step data ----
-  let packagePrice = 0;
-  let addonsTotal = 0;
-  let hotelPrice = 0;
-
-  const s1 = localStorage.getItem("cht_booking_step1");
-  if (s1 && summaryCustomer) {
-    try {
-      const c = JSON.parse(s1);
-      const display = c.fullName
-        ? `${c.fullName} (${c.pax || 1} pax)`
-        : "Not set";
-      summaryCustomer.textContent = display;
-    } catch {
-      summaryCustomer.textContent = "Not set";
-    }
-  }
-
-  const s2 = localStorage.getItem("cht_booking_step2");
-  if (s2 && summaryPackage) {
-    try {
-      const p = JSON.parse(s2);
-      summaryPackage.textContent = p.packageName || "Not selected";
-      packagePrice = Number(p.price) || 0;
-    } catch {
-      summaryPackage.textContent = "Not selected";
-    }
-  }
-
-  const s3 = localStorage.getItem("cht_booking_step3");
-  if (s3) {
-    try {
-      const saved = JSON.parse(s3);
-      const addonIds = saved.addonIds || [];
-      const addonPriceMap = {
-        breakfast: 500,
-        insurance: 1000,
-        guide: 2000,
-        airport: 800
-      };
-      addonsTotal = addonIds.reduce(
-        (sum, id) => sum + (addonPriceMap[id] || 0),
-        0
-      );
-    } catch {
-      addonsTotal = 0;
-    }
-  }
-
-  const s4 = localStorage.getItem("cht_booking_step4");
-  if (s4 && summaryHotel) {
-    try {
-      const h = JSON.parse(s4);
-      if (h.hotelName) {
-        summaryHotel.textContent = h.hotelName;
-      } else {
-        summaryHotel.textContent = "Not selected";
-      }
-      hotelPrice = Number(h.hotelPricePerNight) || 0;
-    } catch {
-      summaryHotel.textContent = "Not selected";
-    }
-  }
-
-  // Previously selected transport
+  let vehicles = [];
   let selectedTransportId = null;
-  const savedTransportRaw = localStorage.getItem("cht_booking_step5");
-  if (savedTransportRaw) {
+
+  // Load existing state
+  const state = BookingState.get();
+  if (state.transport.id) {
+    selectedTransportId = state.transport.id;
+  }
+
+  // Update summary
+  BookingState.populateSummary();
+
+  // Fetch vehicles from database
+  async function loadVehicles() {
     try {
-      const saved = JSON.parse(savedTransportRaw);
-      selectedTransportId = saved.transportId || null;
-    } catch {
-      selectedTransportId = null;
+      transportListInner.innerHTML = '<div class="loading">Loading transportation options...</div>';
+      
+      const response = await fetch('../api/transportation_list.php');
+      const data = await response.json();
+      
+      if (data.success && data.vehicles.length > 0) {
+        vehicles = data.vehicles.map(v => ({
+          id: v.id,
+          type: v.type,
+          capacity: v.capacity,
+          plateNumber: v.plateNumber,
+          provider: v.provider,
+          pricePerDay: v.pricePerDay || estimatePrice(v.type, v.capacity)
+        }));
+        renderVehicles();
+      } else {
+        transportListInner.innerHTML = '<div class="no-data">No transportation available. Please add vehicles first.</div>';
+      }
+    } catch (error) {
+      console.error('Error loading vehicles:', error);
+      transportListInner.innerHTML = '<div class="error">Failed to load transportation. Please try again.</div>';
     }
   }
 
-  // ---- Demo transport options ----
-  const transports = [
-    {
-      id: 1,
-      type: "bus",
-      label: "Bus",
-      seats: 40,
-      company: "Hokkaido Tours Co.",
-      plate: "HOK-1234",
-      pricePerDay: 5000
-    },
-    {
-      id: 2,
-      type: "bus",
-      label: "Bus",
-      seats: 45,
-      company: "Hong Kong Coaches",
-      plate: "HK-5678",
-      pricePerDay: 5000
-    },
-    {
-      id: 3,
-      type: "bus",
-      label: "Bus",
-      seats: 35,
-      company: "Bali Transport",
-      plate: "BALI-009",
-      pricePerDay: 5000
-    },
-    {
-      id: 4,
-      type: "bus",
-      label: "Bus",
-      seats: 40,
-      company: "Taiwan Coaches",
-      plate: "TPE-2026",
-      pricePerDay: 5000
+  // Estimate price based on vehicle type and capacity
+  function estimatePrice(type, capacity) {
+    const basePrice = {
+      'Bus': 5000,
+      'Van': 3000,
+      'Sedan': 2000,
+      'SUV': 2500,
+      'Coaster': 4000
+    };
+    
+    for (const [key, price] of Object.entries(basePrice)) {
+      if (type && type.toLowerCase().includes(key.toLowerCase())) {
+        return price;
+      }
     }
-  ];
+    
+    // Price based on capacity if type not matched
+    if (capacity >= 40) return 5000;
+    if (capacity >= 15) return 3500;
+    if (capacity >= 10) return 3000;
+    return 2000;
+  }
 
-  // ---- Render transport rows ----
-  function renderTransports(filter = "all") {
-    transportListInner.innerHTML = "";
-    transports.forEach(t => {
-      if (filter !== "all" && t.type !== filter) return;
+  // Get vehicle icon based on type
+  function getVehicleIcon(type) {
+    if (!type) return '🚐';
+    const t = type.toLowerCase();
+    if (t.includes('bus')) return '🚌';
+    if (t.includes('van')) return '🚐';
+    if (t.includes('sedan') || t.includes('car')) return '🚗';
+    if (t.includes('suv')) return '🚙';
+    return '🚐';
+  }
 
-      const row = document.createElement("div");
-      row.className =
-        "transport-row" + (t.id === selectedTransportId ? " selected" : "");
-      row.dataset.id = t.id;
+  // Render vehicle rows
+  function renderVehicles(filterType = "all") {
+    if (!vehicles.length) {
+      transportListInner.innerHTML = '<div class="no-data">No transportation options available.</div>';
+      return;
+    }
 
-      row.innerHTML = `
+    const filtered = filterType === "all" 
+      ? vehicles 
+      : vehicles.filter(v => v.type && v.type.toLowerCase().includes(filterType.toLowerCase()));
+
+    if (!filtered.length) {
+      transportListInner.innerHTML = '<div class="no-data">No vehicles match the selected filter.</div>';
+      return;
+    }
+
+    transportListInner.innerHTML = filtered.map(vehicle => `
+      <div class="transport-row ${vehicle.id === selectedTransportId ? 'selected' : ''}" data-id="${vehicle.id}">
         <div class="transport-row-left">
-          <div class="transport-name">${t.label}</div>
+          <div class="transport-name">${getVehicleIcon(vehicle.type)} ${vehicle.type || 'Vehicle'}</div>
           <div class="transport-meta">
-            <span>👥 ${t.seats} seats</span>
-            <span>🏢 ${t.company}</span>
-            <span>🚐 ${t.plate}</span>
+            <span>👥 ${vehicle.capacity} seats</span>
+            <span>🏢 ${vehicle.provider || 'CHT Transport'}</span>
+            <span>🚐 ${vehicle.plateNumber || 'N/A'}</span>
           </div>
         </div>
         <div class="transport-price-block">
-          <div class="transport-price">PHP ${t.pricePerDay.toLocaleString()}</div>
+          <div class="transport-price">PHP ${vehicle.pricePerDay.toLocaleString()}</div>
           <div>per day</div>
-          <button class="transport-select-btn">Select</button>
+          <button class="transport-select-btn">${vehicle.id === selectedTransportId ? '✓ Selected' : 'Select'}</button>
         </div>
-      `;
-      transportListInner.appendChild(row);
-    });
+      </div>
+    `).join('');
   }
 
-  renderTransports();
-
-  // ---- Filter handling ----
-  document
-    .querySelectorAll('input[name="transportFilter"]')
-    .forEach(radio => {
-      radio.addEventListener("change", () => {
-        renderTransports(radio.value);
-      });
+  // Handle filter change
+  document.querySelectorAll('input[name="transportFilter"]').forEach(radio => {
+    radio.addEventListener("change", () => {
+      renderVehicles(radio.value);
     });
-
-  // ---- Selection handling ----
-  transportListInner.addEventListener("click", e => {
-    const row = e.target.closest(".transport-row");
-    if (!row) return;
-    const id = Number(row.dataset.id);
-    selectedTransportId = id;
-    const filter = document.querySelector(
-      'input[name="transportFilter"]:checked'
-    ).value;
-    renderTransports(filter);
-    updateSummary();
   });
 
-  function updateSummary() {
-    const trans = transports.find(t => t.id === selectedTransportId);
-    const transportPrice = trans ? trans.pricePerDay : 0;
+  // Handle vehicle selection
+  if (transportListInner) {
+    transportListInner.addEventListener('click', (e) => {
+      const row = e.target.closest('.transport-row');
+      if (!row) return;
 
-    if (summaryTransport) {
-      summaryTransport.textContent = trans
-        ? `${trans.label} - ${trans.company}`
-        : "Not selected";
-    }
-
-    const total = packagePrice + addonsTotal + hotelPrice + transportPrice;
-    if (summaryTotal) {
-      summaryTotal.textContent =
-        "₱" + total.toLocaleString("en-PH", { minimumFractionDigits: 0 });
-    }
-
-    if (summaryBreakdown) {
-      summaryBreakdown.textContent =
-        "Package: ₱" +
-        packagePrice.toLocaleString("en-PH") +
-        (addonsTotal
-          ? `, Add-ons: ₱${addonsTotal.toLocaleString("en-PH")}`
-          : "") +
-        (hotelPrice ? `, Hotel: ₱${hotelPrice.toLocaleString("en-PH")}` : "") +
-        (transportPrice
-          ? `, Transport: ₱${transportPrice.toLocaleString("en-PH")}`
-          : "");
-    }
-  }
-
-  updateSummary();
-
-  // ---- Navigation ----
-  if (backBtn) {
-    backBtn.addEventListener("click", () => {
-      window.location.href = "userBooking-step4.html";
+      const id = parseInt(row.dataset.id);
+      selectedTransportId = id;
+      
+      const vehicle = vehicles.find(v => v.id === id);
+      if (vehicle) {
+        BookingState.updateStep('transport', {
+          id: vehicle.id,
+          type: vehicle.type,
+          provider: vehicle.provider,
+          plateNumber: vehicle.plateNumber,
+          capacity: vehicle.capacity,
+          pricePerDay: vehicle.pricePerDay
+        });
+        BookingState.populateSummary();
+      }
+      
+      const currentFilter = document.querySelector('input[name="transportFilter"]:checked')?.value || "all";
+      renderVehicles(currentFilter);
     });
   }
 
- if (nextBtn) {
-    nextBtn.addEventListener("click", () => {
+  // Back button
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      window.location.href = 'bookings4.html';
+    });
+  }
+
+  // Next button
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
       if (!selectedTransportId) {
-        if (!confirm("No transportation selected. Continue without transport?")) {
+        if (!confirm('No transportation selected. Continue without transportation?')) {
           return;
         }
       }
-      const trans = transports.find(t => t.id === selectedTransportId) || null;
-      localStorage.setItem(
-        "cht_booking_step5",
-        JSON.stringify({
-          transportId: trans ? trans.id : null,
-          label: trans ? trans.label : null,
-          company: trans ? trans.company : null,
-          pricePerDay: trans ? trans.pricePerDay : 0
-        })
-      );
 
-      // Go to Step 6 (Confirm)
-      window.location.href = "../../../HTML/userDashboard/Bookings/bookings6.html";
+      const currentState = BookingState.get();
+      currentState.currentStep = 6;
+      BookingState.save(currentState);
+
+      window.location.href = 'bookings6.html';
     });
   }
 
-  // ---- Logout & sidebar ----
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      localStorage.removeItem("cht_current_username");
-      window.location.href = "login.html";
-    });
-  }
-  if (sidebarNewBookingBtn) {
-    sidebarNewBookingBtn.addEventListener("click", () => {
-      window.location.href = "userBooking-step1.html";
-    });
-  }
+  // Load vehicles on page load
+  loadVehicles();
 });
-
-//update
-
- 
